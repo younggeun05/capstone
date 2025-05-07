@@ -8,10 +8,9 @@
 import SwiftUI
 import RealityKit
 import ARKit
-import Combine
 
 struct ARScannerView: UIViewRepresentable {
-    func makeUIView(context: ContentView) -> ARView {
+    func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
         
         // Scene Reconstruction 설정
@@ -26,7 +25,7 @@ struct ARScannerView: UIViewRepresentable {
         return arView
     }
     
-    func updateUIView(_ uiView: ARView, context: ContentView) {}
+    func updateUIView(_ uiView: ARView, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
         return Coordinator()
