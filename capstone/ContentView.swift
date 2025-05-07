@@ -41,6 +41,27 @@ struct ContentView: View {
         }
     }
     
+    struct ScanScreen: View {
+        @Environment(\.dismiss) var dismiss
+        
+        var body: some View {
+            VStack {
+                ARScannerView()
+                    .edgesIgnoringSafeArea(.all)
+                
+                Button("스캔 종료 및 저장") {
+                    // 여기서 export trigger 필요
+                    // exportMesh(to: ...) 호출
+                    dismiss()
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+        }
+    }
+    
     // MARK: - ViewBuilder 분리
     
     @ViewBuilder

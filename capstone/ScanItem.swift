@@ -1,5 +1,5 @@
 //
-//  Item.swift
+//  ScanItem.swift
 //  capstone
 //
 //  Created by 박영근 on 4/16/25.
