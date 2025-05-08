@@ -10,8 +10,9 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [ScanItem] // -> ScanItem 사용
-    
+    @Query private var items: [ScanItem]
+    @State private var showingScanView = false
+
     var body: some View {
         NavigationSplitView {
             List {
@@ -30,7 +31,9 @@ struct ContentView: View {
                     EditButton()
                 }
                 ToolbarItem {
-                    Button(action: addItem) {
+                    Button(action: {
+                        showingScanView = true
+                    }) {
                         Label("새 스캔 추가", systemImage:"plus")
                     }
                 }
@@ -39,31 +42,15 @@ struct ContentView: View {
             Text("스캔 항목을 선택하시오")
                 .foregroundStyle(.secondary)
         }
-    }
-    
-    struct ScanScreen: View {
-        @Environment(\.dismiss) var dismiss
-        
-        var body: some View {
-            VStack {
-                ARScannerView()
-                    .edgesIgnoringSafeArea(.all)
-                
-                Button("스캔 종료 및 저장") {
-                    // 여기서 export trigger 필요
-                    // exportMesh(to: ...) 호출
-                    dismiss()
-                }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
+        .sheet(isPresented: $showingScanView) {
+            ScanScreen { item in
+                modelContext.insert(item)
             }
         }
     }
-    
+
     // MARK: - ViewBuilder 분리
-    
+
     @ViewBuilder
     func listRow(for item: ScanItem) -> some View {
         HStack {
@@ -82,7 +69,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     func detailView(for item: ScanItem) -> some View {
         VStack {
@@ -97,7 +84,7 @@ struct ContentView: View {
                     .cornerRadius(12)
                     .padding()
             }
-            
+
             if let modelURL = item.modelFileURL {
                 Text("모델 경로: \(modelURL.lastPathComponent)")
                     .font(.caption)
@@ -106,24 +93,15 @@ struct ContentView: View {
         }
         .padding()
     }
-    
-    // MARK: - 추가 / 삭제
-    
-    private func addItem() {
-        withAnimation {
-            let filename = "Scan_\(UUID().uuidString.prefix(5)).usdz"
-            let newItem = ScanItem(fileName: filename)
-            modelContext.insert(newItem)
-        }
-    }
-    
+
+    // MARK: - 삭제
+
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
                 modelContext.delete(items[index])
             }
         }
-        
     }
 }
 
