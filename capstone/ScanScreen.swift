@@ -9,54 +9,63 @@ import SwiftUI
 import RealityKit
 import ARKit
 
-struct ARScannerView: UIViewRepresentable {
-    func makeUIView(context: Context) -> ARView {
-        let arView = ARView(frame: .zero)
-        
-        // Scene Reconstruction 설정
-        let config = ARWorldTrackingConfiguration()
-        config.environmentTexturing = .automatic
-        config.sceneReconstruction = .mesh
-        config.frameSemantics = .sceneDepth
-        arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
-        
-        // delegate 설정
-        arView.session.delegate = context.coordinator
-        return arView
-    }
-    
-    func updateUIView(_ uiView: ARView, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        return Coordinator()
-    }
-    
-    // MARK: - Coordinator collects mesh data
-    class Coordinator: NSObject, ARSessionDelegate {
-        private var collectedAnchors: [ARMeshAnchor] = []
-        
-        func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
-            for anchor in anchors {
-                if let meshAnchor = anchor as? ARMeshAnchor {
-                    collectedAnchors.append(meshAnchor)
-                }
-            }
-        }
-        func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-            for anchor in anchors {
-                if let meshAnchor = anchor as? ARMeshAnchor {
-                    collectedAnchors.append(meshAnchor)
-                }
-            }
-        }
-        
-        // 저장 트리거용 메서드
-        func exportMesh(to url: URL) {
-            // 여기에 Reality Composer Pro 또는 USDExporter로 변환 로직이 필요함
-            // Apple의 Model I/O 또는 RealityKit 3에서 `Entity` → usdz 가능.
-            print("⚠️ 구현 필요: ARMeshAnchor를 usdz 또는 reality 파일로 저장")
-        }
-    }
-        
-}
+struct ScanScreen: View {
+    @Environment(\.dismiss) var dismiss
+    let onScanComplete: (ScanItem) -> Void
 
+    @State private var arView = ARView(frame: .zero)
+    @State private var meshEntities: [ModelEntity] = []
+
+    var body: some View {
+        VStack {
+            ARScannerView(arView: $arView, meshEntities: $meshEntities)
+                .edgesIgnoringSafeArea(.all)
+
+            Button("스캔 저장") {
+                saveScan()
+            }
+            .padding()
+        }
+    }
+
+    private func saveScan() {
+        guard let entity = meshEntities.first else { return }
+
+        let fileName = "scan_\(UUID().uuidString.prefix(5)).usdz"
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        // RealityKit 3 이상에서만 사용 가능
+        entity.export(to: fileURL, completion: { result in
+            switch result {
+            case .success:
+                ThumbnailGenerator.generateThumbnail(from: entity) { image in
+                    let thumbPath = saveThumbnail(image: image)
+
+                    let newItem = ScanItem(fileName: fileName, thumbnailPath: thumbPath, modelFileURL: fileURL)
+                    DispatchQueue.main.async {
+                        onScanComplete(newItem)
+                        dismiss()
+                    }
+                }
+            case .failure(let error):
+                print("❌ export 실패: \(error)")
+            }
+        })
+    }
+
+    private func saveThumbnail(image: UIImage?) -> String? {
+        guard let image = image,
+              let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("thumb_\(UUID().uuidString.prefix(4)).jpg")
+
+        do {
+            try data.write(to: path)
+            return path.path
+        } catch {
+            print("❌ 썸네일 저장 실패: \(error)")
+            return nil
+        }
+    }
+}
