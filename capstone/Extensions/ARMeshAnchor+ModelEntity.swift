@@ -20,13 +20,14 @@ extension ARMeshAnchor {
         var vertexArray: [SIMD3<Float>] = []
         
         for i in 0..<vertexCount {
-            vertexArray.append(vertices[i])
+            let vertex = vertices[Int32(Int(i))]
+            vertexArray.append(SIMD3<Float>(vertex.x, vertex.y, vertex.z))
         }
         
         var indexArray: [UInt32] = []
         let faceCount = indices.count
         for i in 0..<faceCount {
-            let face = indices[i]
+            let face = indices[i].map { UInt32($0) }
             indexArray.append(contentsOf: face)
         }
         

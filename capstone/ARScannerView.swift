@@ -49,7 +49,7 @@ struct ARScannerView: UIViewRepresentable {
             for anchor in anchors {
                 guard let meshAnchor = anchor as? ARMeshAnchor else { continue }
 
-                let entity = meshAnchor.toModelEntity()
+                guard let entity = meshAnchor.toModelEntity() else { return <#default value#> }
                 meshEntities.append(entity)
             }
         }
@@ -85,7 +85,7 @@ struct TestMeshView: UIViewRepresentable {
         func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
             for anchor in anchors {
                 if let meshAnchor = anchor as? ARMeshAnchor {
-                    let entity = meshAnchor.toModelEntity()
+                    guard let entity = meshAnchor.toModelEntity() else { return <#default value#> }
                     let anchorEntity = AnchorEntity(world: meshAnchor.transform)
                     anchorEntity.addChild(entity)
                     arView?.scene.anchors.append(anchorEntity)

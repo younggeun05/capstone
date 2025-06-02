@@ -16,9 +16,16 @@ class ThumbnailGenerator {
         anchor.addChild(entity)
         arView.scene.anchors.append(anchor)
         
-        // 비동기 스냅샷(비동기방식)
-        arView.snapshot(saveToHDR: false) {
-            completion(image)
+        // 비동기 스냅샷(비동기 방식)
+        var thumbnailImage: UIImage?
+        let semaphore = DispatchSemaphore(value: 0) // 비동기 처리를 위한 세마포어
+        
+        arView.snapshot(saveToHDR: false) { image in
+            thumbnailImage = image
+            semaphore.signal() // 스냅샷 완료 시 세마포어 신호
         }
+        
+        semaphore.wait() // 스냅샷이 완료될 때까지 대기
+        return thumbnailImage // 생성된 이미지 반환
     }
 }

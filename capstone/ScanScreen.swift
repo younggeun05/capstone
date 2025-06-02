@@ -36,8 +36,12 @@ struct ScanScreen: View {
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         
         do {
-            let usdzData = try entity.exportUSDZ()
-            try usdzData.write(to: fileURL)
+            // exportUSDZ() 메서드가 없으므로 대체 방법 필요
+            // let usdzData = try entity.model?.export(to: .usdz) // 대체 방법
+            // try usdzData?.write(to: fileURL)
+            
+            // 대체 방법으로 모델을 저장하는 로직을 추가해야 합니다.
+            // 예를 들어, RealityKit의 다른 방법을 사용하여 모델을 저장할 수 있습니다.
             
             let thumbImage = ThumbnailGenerator.generateThumbnail(from: entity)
             let thumbPath = saveThumbnail(image: thumbImage)
@@ -63,5 +67,4 @@ struct ScanScreen: View {
             return nil
         }
     }
-    
 }
